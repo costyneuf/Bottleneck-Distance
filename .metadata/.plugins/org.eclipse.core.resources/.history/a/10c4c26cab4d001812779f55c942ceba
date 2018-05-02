@@ -1,0 +1,79 @@
+import java.awt.EventQueue;
+
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import java.awt.BorderLayout;
+import java.awt.Choice;
+import java.awt.Component;
+import javax.swing.Box;
+import java.awt.Dimension;
+import javax.swing.JMenuItem;
+import java.awt.Font;
+import java.awt.Color;
+
+public class Main {
+
+	private JFrame frame;
+
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					Main window = new Main();
+					window.frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	/**
+	 * Create the application.
+	 */
+	public Main() {
+		initialize();
+	}
+
+	/**
+	 * Initialize the contents of the frame.
+	 */
+	private void initialize() {
+		frame = new JFrame();
+		frame.setBounds(100, 100, 666, 453);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.getContentPane().setLayout(null);
+		
+		JMenu dataMenu = new JMenu("Data");
+		dataMenu.setForeground(Color.BLACK);
+		dataMenu.setBackground(Color.WHITE);
+		dataMenu.setFont(new Font("Segoe UI Black", Font.BOLD, 18));
+		dataMenu.setBounds(20, 20, 120, 60);
+		frame.getContentPane().add(dataMenu);
+		
+		JMenuItem PD12MenuItem = new JMenuItem("PD1 and PD2");
+		PD12MenuItem.setBackground(Color.WHITE);
+		PD12MenuItem.setForeground(Color.BLACK);
+		PD12MenuItem.setFont(new Font("Segoe UI Black", Font.BOLD, 14));
+		PD12MenuItem.setBounds(0, 0, 231, 38);
+		dataMenu.add(PD12MenuItem);
+		
+		JMenuItem PD13MenuItem = new JMenuItem("PD1 and PD3");
+		PD13MenuItem.setForeground(Color.BLACK);
+		PD13MenuItem.setFont(new Font("Segoe UI Black", Font.BOLD, 14));
+		PD13MenuItem.setBackground(Color.WHITE);
+		dataMenu.add(PD13MenuItem);
+		
+		JMenuItem PD45MenuItem = new JMenuItem("PD4 and PD5");
+		PD45MenuItem.setForeground(Color.BLACK);
+		PD45MenuItem.setFont(new Font("Segoe UI Black", Font.BOLD, 14));
+		PD45MenuItem.setBackground(Color.WHITE);
+		dataMenu.add(PD45MenuItem);
+		
+		
+
+	}
+}
