@@ -1,0 +1,4 @@
+The bottle distance between #1 and #18 = 683.169268
+The bottle distance between #2 and #3 = 393.136307
+The bottle distance between #3 and #3 = 393.136307
+The bottle distance between #4 and #3 = 393.136307

@@ -9,20 +9,23 @@ function simple_gui2
 
     % Construct the components.
     hBottleneckDistance    = uicontrol('Style','pushbutton',...
-                 'String','Bottleneck Distance','Position',[525,220,180,25],...
+                 'String','Bottleneck Distance','Position',[485,220,180,25],...
                  'Callback',@bdbutton_Callback);
     hPlotPD    = uicontrol('Style','pushbutton',...
-                 'String','Plot Persistence Diagrams','Position',[525,180,180,25],...
+                 'String','Analyze Planar Shapes','Position',[525,180,180,25],...
                  'Callback',@plotbutton_Callback);
+     hTestSignature    = uicontrol('Style','pushbutton',...
+         'String','Signature Test','Position',[525,140,180,25],...
+         'Callback',@sigbutton_Callback);
 
     htext  = uicontrol('Style','text','String','Select Data',...
-               'Position',[415,90,60,15]);
+               'Position',[525,90,60,15]);
     hpopup = uicontrol('Style','popupmenu',...
-               'String',{'PD1 and PD2','PD1 and PD3','PD4 and PD5'},...
-               'Position',[415,50,100,25],...
+               'String',{'PD1 and PD2','PD1 and PD3','PD4 and PD5', 'Customized Data'},...
+               'Position',[525,50,100,25],...
                'Callback',@popup_menu_Callback);
     ha = axes('Units','pixels','Position',[50,70,400,385]);
-    align([hBottleneckDistance,hPlotPD,htext,hpopup],'Center','None');
+    align([hBottleneckDistance,hPlotPD,hTestSignature,htext,hpopup],'Left','None');
 
     % Initialize the UI.
     % Change units to normalized so components resize automatically.
@@ -30,6 +33,7 @@ function simple_gui2
     ha.Units = 'normalized';
     hBottleneckDistance.Units = 'normalized';
     hPlotPD.Units = 'normalized';
+    hTestSignature.Units = 'normalized';
     htext.Units = 'normalized';
     hpopup.Units = 'normalized';
 
@@ -40,7 +44,11 @@ function simple_gui2
     PD4 = importdata('PD4.mat');
     PD5 = importdata('PD5.mat');
     planarShapes = importdata('planarShapes.mat');
+    planarShapesBarcodesOneDim = importdata('planarShapesBarcodesOneDim.mat');
+    planarShapesBarcodesZeroDim = importdata('planarShapesBarcodesZeroDim.mat');
     planeCurve = importdata('planeCurve.mat');
+    signaturesBarcodesOneDim = importdata('signaturesBarcodesOneDim.mat');
+    signaturesBarcodesZeroDim = importdata('signaturesBarcodesZeroDim.mat');
     signatures = importdata('signatures.mat');
 
     % Create a plot in the axes.
@@ -81,6 +89,11 @@ function simple_gui2
               case 'PD4 and PD5' 
                  current_PD1 = PD4;
                  current_PD2 = PD5;
+              case 'Customized Data'
+                [file,path] = uigetfile('*.mat');
+                current_PD1 = importdata(fullfile(path,file));
+                [file,path] = uigetfile('*.mat');
+                current_PD2 = importdata(fullfile(path,file));
           end
         scatter(current_PD1(:,1),current_PD1(:,2), 15, 'filled', 'MarkerFaceColor','r');
         hold on;
@@ -297,7 +310,13 @@ function simple_gui2
         fprintf('%d, %d, %d\n', tutteTest(A), tutteTest(B), tutteTest(C));
         
         % test bottleneckDistance(A, C)
-        d = fullBottleneckDist(current_PD1, current_PD2, 0.2);
+        prompt = {'Enter the value of epsilon:'};
+        dims = [1 35];
+        definput = {'0.2'};
+        title = 'Input';
+        answer = inputdlg(prompt,title,dims,definput);
+        epsilon = str2num(answer{1});
+        d = fullBottleneckDist(current_PD1, current_PD2, epsilon);
         s = num2str(d);
         fprintf('%.4f\n', d);
         msgbox(s);
@@ -310,8 +329,81 @@ function simple_gui2
 
 
       function plotbutton_Callback(source,eventdata) 
-
+        figure;
+        prompt = {'Enter first shape number:'};
+        dims = [1 35];
+        definput = {'20'};
+        title = 'Input';
+        answer = inputdlg(prompt,title,dims,definput);
+        first = str2num(answer{1});
+        PD = planarShapes(:,:,first);
+        current_PD1 = PD.';
+        prompt = {'Enter second shape number:'};
+        dims = [1 35];
+        definput = {'872'};
+        answer = inputdlg(prompt,title,dims,definput);
+        second = str2num(answer{1});
+        PD = planarShapes(:,:,second);
+        current_PD2 = PD.';
+        subplot(3,1,1);
+        scatter(current_PD1(:,1),current_PD1(:,2), 15, 'filled', 'MarkerFaceColor','r');
+        subplot(3,1,2);
+        scatter(current_PD2(:,1),current_PD2(:,2), 15, 'filled', 'MarkerFaceColor','g');
+        subplot(3,1,3); 
+        plotBarcodes(planarShapesBarcodesZeroDim(:,first), 'r', 2); 
+        plotBarcodes(planarShapesBarcodesZeroDim(:,second), 'g', 1);
+        d = fullBottleneckDist(current_PD1, current_PD2, 0.2);
+        s = num2str(d);
+        msgbox(s);
       end
+  
+    function sigbutton_Callback(source, eventdata)
+        figure;
+        prompt = {'Enter data set number:'};
+        dims = [1 35];
+        definput = {'10'};
+        title = 'Input';
+        answer = inputdlg(prompt,title,dims,definput);
+        group = str2num(answer{1});
+        
+        current_PD1 = signatures(:,:,group,1);
+        current_PD1 = current_PD1.';
+        for i = 1 : 40
+            a = signatures(:,:,group,i);
+            a = a.';
+            subplot(8,5,i);
+            scatter(a(:,1),a(:,2), 10, 'filled', 'MarkerFaceColor','r');
+        end
+        
+         % test 
+          fileID = fopen('testSignatures.txt','w');  
+        
+        figure
+        for i = 1 : 40
+            subplot(8,5,i);
+            current_data = signaturesBarcodesZeroDim{group,i};
+            scatter(current_data(:,2), zeros(length(current_data(:,2)),1),10, 'filled', 'MarkerFaceColor','b');
+        end
+        
+        d = 10000000000000000000;
+        index = 1;
+        for i = 1 : 39
+            current_PD1 = signatures(:,:,group,i);
+            current_PD1 = current_PD1.';
+            for j = i+1 : 40        
+                current_PD2 = signatures(:,:,group,j);
+                current_PD2 = current_PD2.';
+                d_ = fullBottleneckDist(current_PD1, current_PD2, 0.95);
+                if d_ < d
+                    d = d_;
+                    index = j;
+                end
+            end
+            fprintf(fileID,'The bottle distance between #%d and #%d = %f\n',i, index, d);            
+        end
+        fclose(fileID);
+        
+    end
   
 
   
