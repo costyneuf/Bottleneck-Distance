@@ -4,6 +4,7 @@ function simple_gui2
     % plots the selected data in the axes.
 
     %  Create and then hide the UI as it is being constructed.
+    clc
     f = figure('Visible','off','Position',[360,500,700,485]);
 
     % Construct the components.
@@ -45,6 +46,12 @@ function simple_gui2
     % Create a plot in the axes.
     current_PD1 = PD1;
     current_PD2 = PD2;
+    
+    % Plot graphs
+    scatter(current_PD1(:,1),current_PD1(:,2), 15, 'filled', 'MarkerFaceColor','r');
+    hold on;
+    scatter(current_PD2(:,1),current_PD2(:,2), 15, 'filled', 'MarkerFaceColor','g');
+    hold off; 
 
     % Assign the a name to appear in the window title.
     f.Name = 'Bottleneck Distance Demo';
@@ -75,6 +82,10 @@ function simple_gui2
                  current_PD1 = PD4;
                  current_PD2 = PD5;
           end
+        scatter(current_PD1(:,1),current_PD1(:,2), 15, 'filled', 'MarkerFaceColor','r');
+        hold on;
+        scatter(current_PD2(:,1),current_PD2(:,2), 15, 'filled', 'MarkerFaceColor','g');
+        hold off;  
        end
 
       function [a] = calculate_Mpoint(point)
@@ -120,7 +131,7 @@ function simple_gui2
           len = length(T);
           a = 2;
           for i = 2 : len
-              if round(T(1,a),2) ~= round(T(1,a - 1),2)
+              if round(T(1,a),3) ~= round(T(1,a - 1),3)
                   a = a + 1;
               else
                   T(:,a) = [];
@@ -135,7 +146,7 @@ function simple_gui2
         M_t = zeros(length(M), length(M));
         for i = 1 : length(M)
             for j = 1 : length(M)
-                if round(M(i,j),2) <= round(t,2)
+                if round(M(i,j),3) <= round(t,3)
                     M_t(i,j) = 1;
                 end
             end
@@ -177,6 +188,61 @@ function simple_gui2
             end
         end
     end
+
+    % A^epsilon = simplifyPD(A, epsilon)
+	% Inputs: An N * 2 matrix representing a persistence diagram A and 
+    %   epsilon > 0,
+	% Output: Simplified persistence diagram A^epsilon, represented as an 
+    %   N' * 2 matrix 
+	% 	with N' <= N.
+    function [A_epsilon] = simplifyPD(A, epsilon)
+        A_epsilon = zeros(length(A(:,1)), 2);
+        b = 1;
+        for j = 1 : length(A)
+            a = A(j,:);
+            if calculate_Mpoint(a) > epsilon
+                A_epsilon(b, 1) = a(1,1);
+                A_epsilon(b, 2) = a(1,2);
+                b = b + 1;
+            else
+                A_epsilon(b,:) = [];
+            end
+        end
+    end
+
+    % (A', C') = equalCard(A, C)
+	% Inputs: PDs A and C with potentially an unequal number of points,
+	% Outputs: PDs A' and C' of equal cardinality max{|A|, |C|}.
+    function [A_, C_] = equalCard(A, C)
+        if length(A(:,1)) > length(C(:,1))
+            A_ = zeros(length(A(:,1)),2);
+            C_ = zeros(length(A(:,1)),2);
+        else
+            A_ = zeros(length(C(:,1)),2);
+            C_ = zeros(length(C(:,1)),2);
+        end
+        for i = 1 : length(A)
+            A_(i,1) = A(i,1);
+            A_(i,2) = A(i,2);
+        end
+        for i = 1 : length(C)
+            C_(i,1) = C(i,1);
+            C_(i,2) = C(i,2);
+        end
+    end
+
+    % d = fullBottleneckDist(A, C, epsilon)
+	% Inputs: PDs A and C of potentially different cardinality and a 
+    %   simplification parameter epsilon,
+	% Output: bottleneck distance d between (A_epsilon)' and (C_epsilon)'.
+    function [d] = fullBottleneckDist(A, C, epsilon)
+        % simplify the PDs according to parameter epsilon
+        A_epsilon = simplifyPD(A, epsilon);
+        C_epsilon = simplifyPD(C, epsilon);
+        % add necessary copies of {(0, 0)} to get PDs of the same cardinality
+        [A_epsilon_, C_epsilon_] = equalCard(A_epsilon, C_epsilon);
+        d = bottleneckDistance(A_epsilon_, C_epsilon_);
+    end
    
       % Push button callbacks. Each callback plots current_data in the
       % specified plot type.
@@ -184,7 +250,7 @@ function simple_gui2
       function bdbutton_Callback(source,eventdata)
           clc;
         % test costMatrix  
-        M = costMatrix(current_PD1, current_PD2);  
+        M = costMatrix(PD1, PD2);  
         fileID = fopen('testCostMatrix.txt','w');
         for i = 1 : length(M)
             for j = 1 : length(M(1,:))
@@ -230,17 +296,21 @@ function simple_gui2
             1 1 1];
         fprintf('%d, %d, %d\n', tutteTest(A), tutteTest(B), tutteTest(C));
         
-        %test bottleneckDistance(A, C)
-        fprintf('%.4f\n', bottleneckDistance(current_PD1, current_PD2));
+        % test bottleneckDistance(A, C)
+        d = fullBottleneckDist(current_PD1, current_PD2, 0.2);
+        s = num2str(d);
+        fprintf('%.4f\n', d);
+        msgbox(s);
+
+        % test simplifyPD
+        PD4_test = simplifyPD(PD4, 0.2)
+        len = length(PD4_test(:,1))
       end
   
 
 
       function plotbutton_Callback(source,eventdata) 
-        plot(current_PD1, 'r.');
-        hold on;
-        plot(current_PD2, 'b.');
-        hold off;  
+
       end
   
 
